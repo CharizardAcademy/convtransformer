@@ -2,13 +2,13 @@
 
 # A Convolutional Transformer for Character-Level Neural Machine Translation 
 
-This file aims to provide a overall guidance of the code of the master thesis. The thesis was conducted during my stay at Institute of Neuroinformatics, ETH Zurich and University of Zurich, supervised by Prof.Dr.Richard Hahnloser, and advised by M.Sc. Nikola Nikolov and Yuhuang Hu. My sincere thanks to them all for everything in the last 6 month in Zurich. 
+This file aims to provide a overall guidance of the implementation of this master thesis. The thesis was conducted during my visit at Institute of Neuroinformatics (INI), ETH Zurich and University of Zurich, supervised by Prof.Dr.Richard Hahnloser, and advised by M.Sc. Nikola Nikolov and M.Sc. Yuhuang Hu. My sincere thanks to them all for everything in the last 6 month in Zurich. 
 
 # Abstract
 
 We propose a novel transformer-based architecture ([Vaswani et al. in 2017](https://arxiv.org/abs/1706.03762)) optimized  for  character-level  neural machine translation.  The model was entirely build on character-level inputs and thus requires no specific tokenizations. Our model modifies the encoder to contextualize the character representations by using parallel 1D convolutions. 
 
-We perform extensive experiments  on  the  UN  dataset,  testing  both bilingual  and  multilingual  translation  to  English,  using up to three input languages (FR, ES and ZH). Our approach performs comparably or better than the base transformer, while being faster to converge and learning more robust character-level alignments, regardless of the input language. 
+We perform extensive experiments  on  the  UN  dataset,  testing  both bilingual  and  multilingual  translation  to  English,  using up to three input languages (French, Spanish and Chinese). Our approach performs comparably or better than the base transformer, while being faster to converge and learning more robust character-level alignments, regardless of the input language. 
 
 # Corpus
 
