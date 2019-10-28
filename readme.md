@@ -6,7 +6,7 @@ This file aims to provide a overall guidance of the code of the master thesis. T
 
 # Abstract
 
-We propose a novel transformer-based architecture ([Vaswani et al. in 2017](https://arxiv.org/abs/1706.03762)) optimized  for  character-level  neural machine translation.  The model was entirely build on character-level inputs and thus requires no specific tokenizations. Our model modifies the encoder to contextualize the character representations by using parallel 1D convolutions.  To make
+We propose a novel transformer-based architecture ([Vaswani et al. in 2017](https://arxiv.org/abs/1706.03762)) optimized  for  character-level  neural machine translation.  The model was entirely build on character-level inputs and thus requires no specific tokenizations. Our model modifies the encoder to contextualize the character representations by using parallel 1D convolutions. 
 
 We perform extensive experiments  on  the  UN  dataset,  testing  both bilingual  and  multilingual  translation  to  English,  using up to three input languages (FR, ES and ZH). Our approach performs comparably or better than the base transformer, while being faster to converge and learning more robust character-level alignments, regardless of the input language. 
 
