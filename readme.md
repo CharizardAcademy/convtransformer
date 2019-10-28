@@ -1,4 +1,4 @@
-![A Convolutional Transformer for Character-Level Neural Machine Translation](/home/gaoyingqiang/Desktop/convtransformer/README/archi-new-compact.png)
+![A Convolutional Transformer for Character-Level Neural Machine Translation](./README/archi-new-compact.png)
 
 # A Convolutional Transformer for Character-Level Neural Machine Translation 
 
