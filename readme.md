@@ -1,4 +1,4 @@
-![A Convolutional Transformer for Character-Level Neural Machine Translation](/home/gaoyingqiang/Desktop/convtransformer/README/archi-new-compact.png)
+![A Convolutional Transformer for Character-Level Neural Machine Translation](./README/archi-new-compact.png)
 
 # A Convolutional Transformer for Character-Level Neural Machine Translation 
 
@@ -142,7 +142,9 @@ To submit jobs to the cluster, modify the file `convtransformer-run.sh` and `tra
 
 To run the model on local GPUs, simply run
 
-`CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py /cluster/scratch/username/UN-bin/multilingual/fres-en/test-fr/ --arch convtransformer --optimizer adam --adam-betas '(0.9, 0.98)' --clip-norm 0.0 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates 4000 --lr 0.0001 --min-lr 1e-09 --criterion label_smoothed_cross_entropy --label-smoothing 0.1 --weight-decay 0.0 --max-tokens 3000   --save-dir /cluster/scratch/username/checkpoints-conv-multi-fres-en/ --no-progress-bar --log-format simple --log-interval 2000 --allow_shortcut --find-unused-parameters --ddp-backend=no_c10d` 
+```shell
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py /cluster/scratch/username/UN-bin/multilingual/fres-en/test-fr/ --arch convtransformer --optimizer adam --adam-betas '(0.9, 0.98)' --clip-norm 0.0 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates 4000 --lr 0.0001 --min-lr 1e-09 --criterion label_smoothed_cross_entropy --label-smoothing 0.1 --weight-decay 0.0 --max-tokens 3000   --save-dir /cluster/scratch/username/checkpoints-conv-multi-fres-en/ --no-progress-bar --log-format simple --log-interval 2000 --allow_shortcut --find-unused-parameters --ddp-backend=no_c10d
+```
 
 where `--ddp-backend=no_c10d`  and `--find-unused-parameters` are crucial arguments to train the convtransformer model. One optional argument is `--allow_shortcut`,  which will enable the shortcut connections of the convtransformer. 
 
