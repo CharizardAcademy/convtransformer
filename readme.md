@@ -217,7 +217,17 @@ split_generations $folder
 
 ### Evaluation on with manual input
 
+To generate translation by manually inputting the sentence, run:
 
+```shell
+cd /path/to/your/workspace/convtransformer/
+
+python interactive.py -source_sentence "Violación: uso de cloro gaseoso por el régimen sirio." \ 
+-path_checkpoint "/path/to/your/workspace/checkpoints-conv-multi-fres-en/checkpoint30.pt" \
+-data_bin "/path/to/your/workspace/UN-bin/multilingual/fres-en/test-es/"
+```
+
+This will print out the translation. 
 
 # Analysis
 
