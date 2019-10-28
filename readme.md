@@ -164,7 +164,60 @@ where `--ddp-backend=no_c10d`  and `--find-unused-parameters` are crucial argume
 
 To train model on less than 4 GPUs, please specify the GPU in your computer that you want to use to train the model by setting `CUDA_VISIBLE_DEVICES` to the GPU actual index.
 
-## Inference
+# Inference
+
+We use again Moses script to compute the final BLEU points of the model. During the training, we store every checkpoint after one epoch is finished. We train models on WMT2015 up to 20 epochs and on UNPC up to 30 epochs.
+
+### Evaluation on test set
+
+As an example, to evaluate the test set, run `conv-multi-fres-en.sh ` to generate translation files of each individual checkpoint. To compute the BLEU point of one translation file, run:
+
+```shell
+cd /path/to/your/workspace/geneations/conv-multi-fres-en/
+cd ./test-fr/
+
+bash geneation_split.sh
+
+rm -f generation_split.sh.sys generation_split.sh.ref 
+
+mkdir split
+
+mv generate*.out.sys ./split/
+mv generate*.out.ref ./split/
+
+cd ./split/
+
+perl multi-bleu.perl generate30.out.ref < generate30.out.sys
+```
+
+For`generation_split.sh`, copy the following content into the shell:
+
+```shell
+#!/bin/bash
+
+function split_generations ()
+{
+  for file in `ls $1`
+  do
+    if [ -d $1"/"$file ]
+    then
+      readfile $1"/"$file
+    else
+      #echo $1"/"$file
+      grep ^T $1"/"$file | cut -f2- | perl -ple 's{(\S)-(\S)}{$1 ##AT##-##AT## $2}g' > $1"/"$file.ref
+      grep ^H $1"/"$file |cut -f3- | perl -ple 's{(\S)-(\S)}{$1 ##AT##-##AT## $2}g' > $1"/"$file.sys
+   echo `basename $file`
+   fi
+  done
+}
+
+folder=`pwd`
+split_generations $folder 
+```
+
+### Evaluation on with manual input
+
+
 
 # Analysis
 
