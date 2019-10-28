@@ -1,4 +1,4 @@
-![A Convolutional Transformer for Character-Level Neural Machine Translation](/home/gaoyingqiang/Downloads/README/archi-new-compact_p001.png)
+![A Convolutional Transformer for Character-Level Neural Machine Translation](/home/gaoyingqiang/Desktop/convtransformer/README/archi-new-compact.png)
 
 # A Convolutional Transformer for Character-Level Neural Machine Translation 
 
@@ -100,35 +100,55 @@ The next step is to do data binarization of the data so we can directly train th
 
 **evaluation on French input** 
 
-`python preprocess.py --source-lang fres --target-lang en \`
+```python
+python preprocess.py --source-lang fres --target-lang en \
 
-`--trainpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.train.fres-en/ \`
+--trainpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.train.fres-en/ \
 
-`--validpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.valid.fres-en/ \`
+--validpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.valid.fres-en/ \
 
-`--testpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.test.fres-en/ \`
+--testpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.test.fres-en/ \
 
-`--destdir /path/to/your/workspace/UN-bin/multilingual/fres-en/test-fr/ \`	 
+--destdir /path/to/your/workspace/UN-bin/multilingual/fres-en/test-fr/ \ 
 
-`--nwordssrc 10000 --nwordstgt 10000 % choose number larger than at least 1000`
+--nwordssrc 10000 --nwordstgt 10000 % choose number larger than at least 1000
+```
 
 **evaluation on Spanish input**
 
-`python preprocess.py --source-lang fres --targe-lang en \`
+```python
+python preprocess.py --source-lang fres --targe-lang en \
 
-`--trainpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.train.fres-en/ \`
+--trainpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.train.fres-en/ \
 
-`--validpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.valid.fres-en/ \`
+--validpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.valid.fres-en/ \
 
-`--testpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.test.fres-en/ \`
+--testpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.test.fres-en/ \
 
-`--destdir /path/to/your/workspace/UN-bin/multilingual/fres-en/test-es/ \`
+--destdir /path/to/your/workspace/UN-bin/multilingual/fres-en/test-es/ \
 
-`--nwordssrc 10000 --nwordstgt 10000`
+--nwordssrc 10000 --nwordstgt 10000
+```
 
 # Training
 
-# Inference
+We train our models on the ETH Zurich Leonhard cluster. Each model was trained with 4 NVIDIA 1080x GPUs.  The models are trained with Adam optimizer and an adaptive learning rate adjusting method with warm-up learning rate initials. 
+
+To submit jobs to the cluster, modify the file `convtransformer-run.sh` and `transformer-run.sh`correspondingly and do`bash convtransformer-run.sh`:
+
+- `120:00` indicates the total training time. The maximal training time for one submission is 120 hours.  Submissions that require more than 120 training hours will be shut down by the cluster automatically after 120 hours.
+- `mem=40000` indicates the total memory.  To be able to run the experiment successfully, please at lease ask for more than 40000 Bytes for memory.
+- `ngpus_excl_p=4` specifies the number of GPUs that are required by the submission. We train all our models on 4 GPUs. 
+
+To run the model on local GPUs, simply run
+
+`CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py /cluster/scratch/username/UN-bin/multilingual/fres-en/test-fr/ --arch convtransformer --optimizer adam --adam-betas '(0.9, 0.98)' --clip-norm 0.0 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates 4000 --lr 0.0001 --min-lr 1e-09 --criterion label_smoothed_cross_entropy --label-smoothing 0.1 --weight-decay 0.0 --max-tokens 3000   --save-dir /cluster/scratch/username/checkpoints-conv-multi-fres-en/ --no-progress-bar --log-format simple --log-interval 2000 --allow_shortcut --find-unused-parameters --ddp-backend=no_c10d` 
+
+where `--ddp-backend=no_c10d`  and `--find-unused-parameters` are crucial arguments to train the convtransformer model. One optional argument is `--allow_shortcut`,  which will enable the shortcut connections of the convtransformer. 
+
+To train model on less than 4 GPUs, please specify the GPU in your computer that you want to use to train the model by setting `CUDA_VISIBLE_DEVICES` to the GPU actual index.
+
+## Inference
 
 # Analysis
 
