@@ -29,7 +29,7 @@ The preprocessed data we used in the thesis can be found on Google Drive.
 
 ### install fairseq
 
-We implement our model based on the open-sourced fairseq project by FaceBook (Ott et al. in 2019). To install the fairseq repository, do the following:
+We implement our model based on the open-sourced fairseq project by FaceBook ([Ott et al. in 2019](https://arxiv.org/abs/1904.01038)). To install the fairseq repository, do the following:
 
 ```shell
 cd /path/to/your/workspace/
@@ -47,7 +47,7 @@ python setup.py develop
 
 ### data cleaning
 
-We use the Moses script to clean the data. The Moses tools are public available at https://github.com/moses-smt/mosesdecoder.git. We use the following scripts to clean the data:
+We use the Moses script ([Koehn et al. in 2007](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.332.8432&rep=rep1&type=pdf)) to clean the data. The Moses tools are public available at https://github.com/moses-smt/mosesdecoder.git. We use the following scripts to clean the data:
 
 ``` shell
 /mosesdecoder/scripts/tokenizer/remove-non-printing-char.perl
@@ -59,13 +59,15 @@ We use the Moses script to clean the data. The Moses tools are public available 
 
 ### Convert Chinese texts to Wubi texts
 
-To convert a text of raw Chinese characters into a text of correponding Wubi codes, run the following commands:
+To convert a text of raw Chinese characters into a text of corresponding Wubi codes, run the following commands:
 
 ```shell
 cd /path/to/your/workspace/convtransformer/
 
 python convert_text.py --input-doc /path/to/the/chinese/text --output-doc /path/to/the/wubi/text --convert-type ch2wb
 ```
+
+The `convert_text.py` is available at t https://github.com/duguyue100/wmt-en2wubi.
 
 ### Bilingual Training Sets
 
