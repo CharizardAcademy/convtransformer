@@ -31,72 +31,79 @@ The preprocessed data we used in the thesis can be found on Google Drive.
 
 We implement our model based on the open-sourced fairseq project by FaceBook (Ott et al. in 2019). To install the fairseq repository, do the following:
 
-`cd /path/to/your/workspace/`
+```shell
+cd /path/to/your/workspace/
 
-`git clone https://github.com/pytorch/fairseq.git`
+git clone https://github.com/pytorch/fairseq.git
 
-`cd ./fairseq/`
+cd ./fairseq/
 
-`pip install -r requirements.txt % install dependencies`
+pip install -r requirements.txt % install dependencies
 
-`python setup.py build % build fairseq`
+python setup.py build % build fairseq
 
-`python setup.py develop`
+python setup.py develop
+```
 
 ### data cleaning
 
 We use the Moses script to clean the data. The Moses tools are public available at https://github.com/moses-smt/mosesdecoder.git. We use the following scripts to clean the data:
 
-`/mosesdecoder/scripts/tokenizer/remove-non-printing-char.perl`
+``` shell
+/mosesdecoder/scripts/tokenizer/remove-non-printing-char.perl
 
-`/mosesdecoder/scripts/tokenizer/tokenizer.perl`
+/mosesdecoder/scripts/tokenizer/tokenizer.perl
 
-`/mosesdecoder/scripts/training/clean-corpus-n.perl`
+/mosesdecoder/scripts/training/clean-corpus-n.perl
+```
 
 ### Convert Chinese texts to Wubi texts
 
 To convert a text of raw Chinese characters into a text of correponding Wubi codes, run the following commands:
 
-`cd /path/to/your/workspace/convtransformer/`
+```shell
+cd /path/to/your/workspace/convtransformer/
 
-`python convert_text.py --input-doc /path/to/the/chinese/text --output-doc /path/to/the/wubi/text --convert-type ch2wb` 
+python convert_text.py --input-doc /path/to/the/chinese/text --output-doc /path/to/the/wubi/text --convert-type ch2wb
+```
 
 ### Bilingual Training Sets
 
 To construct training sets for bilingual translation, run the following commands (example for UNPC French - English):
 
-`cd /path/to/your/workspace/UN-corpora/`
+```shell
+cd /path/to/your/workspace/UN-corpora/
+cd ./en-fr
 
-`cd ./en-fr/`
+paste -d'|' UNv1.0.en-fr.fr UNv1.0.en-fr.en | cat -n |shuf -n 1000000 | sort -n | cut -f2 > train.parallel`.fr-en
 
-`paste -d'|' UNv1.0.en-fr.fr UNv1.0.en-fr.en | cat -n |shuf -n 1000000 | sort -n | cut -f2 > train.parallel`.fr-en
-
-`cut -d'|' -f1 train.parallel.fr-en > 1mil.train.fr-en.fr
-`
-
-`cut -d'|' -f2 train.parallel.fr-en > 1mil.train.fr-en.en`
+cut -d'|' -f1 train.parallel.fr-en > 1mil.train.fr-en.fr
+cut -d'|' -f2 train.parallel.fr-en > 1mil.train.fr-en.en
+```
 
 ### Multilingual Training Sets
 
 To construct training sets for multilingual translation, run the following commands (example for UNPC French + Spanish - English):
 
-`cat train.parallel.fr-en train.parallel.es-en > concat.train.parallel.fres-en`
+```shell
+cat train.parallel.fr-en train.parallel.es-en > concat.train.parallel.fres-en
 
-`shuf concat.train.parallel.fres-en > shuffled.train.parallel.fres-en`
+shuf concat.train.parallel.fres-en > shuffled.train.parallel.fres-en
 
-`cut -d'|' -f1 shuffled.train.parallel.fres-en > 2mil.train.fres-en.fres`
-
-`cut -d'|' -f2 shuffled.train.parallel.fres-en > 2mil.train.fres-en.en`
+cut -d'|' -f1 shuffled.train.parallel.fres-en > 2mil.train.fres-en.fres
+cut -d'|' -f2 shuffled.train.parallel.fres-en > 2mil.train.fres-en.en
+```
 
 ### Data Binarization
 
 The next step is to do data binarization of the data so we can directly train the model with the help of fairseq. Make sure you have `pytorch` installed before this step. Example for UNPC French + Spanish - English: 
 
-`mkdir /path/to/your/workspace/all-data/UN-bin/multilingual/fres-en/test-fr/`
+``` shell
+mkdir /path/to/your/workspace/all-data/UN-bin/multilingual/fres-en/test-fr/
+mkdir /path/to/your/workspace/all-data/UN-bin/multilingual/fres-en/test-es/
 
-`mkdir /path/to/your/workspace/all-data/UN-bin/multilingual/fres-en/test-es/`
-
-`cd /path/to/your/workspcae/convtransformer/`
+cd /path/to/your/workspcae/convtransformer/
+```
 
 **evaluation on French input** 
 
