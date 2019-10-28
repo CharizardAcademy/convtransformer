@@ -100,7 +100,7 @@ The next step is to do data binarization of the data so we can directly train th
 
 **evaluation on French input** 
 
-```python
+```shell
 python preprocess.py --source-lang fres --target-lang en \
 
 --trainpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.train.fres-en/ \
@@ -116,7 +116,7 @@ python preprocess.py --source-lang fres --target-lang en \
 
 **evaluation on Spanish input**
 
-```python
+```shell
 python preprocess.py --source-lang fres --targe-lang en \
 
 --trainpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.train.fres-en/ \
