@@ -6,7 +6,7 @@ This file aims to provide a overall guidance of the code of the master thesis. T
 
 # Abstract
 
-We propose a novel transformer-based architecture (Vaswani et al. in 2017) optimized  for  character-level  neural machine translation.  The model was entirely build on character-level inputs and thus requires no specific tokenizations. Our model modifies the encoder to contextualize the character representations by using parallel 1D convolutions.  To make
+We propose a novel transformer-based architecture ([Vaswani et al. in 2017](https://arxiv.org/abs/1706.03762)) optimized  for  character-level  neural machine translation.  The model was entirely build on character-level inputs and thus requires no specific tokenizations. Our model modifies the encoder to contextualize the character representations by using parallel 1D convolutions.  To make
 
 We perform extensive experiments  on  the  UN  dataset,  testing  both bilingual  and  multilingual  translation  to  English,  using up to three input languages (FR, ES and ZH). Our approach performs comparably or better than the base transformer, while being faster to converge and learning more robust character-level alignments, regardless of the input language. 
 
@@ -14,12 +14,12 @@ We perform extensive experiments  on  the  UN  dataset,  testing  both bilingual
 
 We test our model on two corpora:
 
-- the WMT2015 German - English datasets
-- the United Nations Parallel Corpus (UNPC)
+- the [WMT2015 German - English datasets](http://www.statmt.org/wmt15/translation-task.html)
+- the [United Nations Parallel Corpus (UNPC)](https://conferences.unite.un.org/UNCorpus/)
 
 The experiments are conducted in both bilingual and multilingual setting. For bilingual translation, we have only one source language as input, while for multilingual translation, we input a mixture of two or three source languages to the model. In all our experiments, English is chosen to be the target language.
 
-We construct bilingual translation on WMT2015 as well as on UNPC corpus. For WMT2015 German - English translation, we utilize all parallel German - English sentence pairs of each individual dataset and construct a training set of 4.5 million sentence pairs, i.e. the same as the work proposed by Lee et. al in 2017.  For UNPC corpus, we perform French - English, Spanish - English and Chinese - English translation. Each of these bilingual language pair, we randomly sample 1 million sentence pairs to construct the training set, and use the test and valid set provided by the UNPC corpus. Noticed that although UNPC provides sentence-aligned corpora, we didn't created training sets that are sentence aligned, since the main goal of this thesis is not exploring the joint embedding space of all source languages.
+We construct bilingual translation on WMT2015 as well as on UNPC corpus. For WMT2015 German - English translation, we utilize all parallel German - English sentence pairs of each individual dataset and construct a training set of 4.5 million sentence pairs, i.e. the same as the work proposed by [Lee et. al in 2017](https://arxiv.org/abs/1610.03017).  For UNPC corpus, we perform French - English, Spanish - English and Chinese - English translation. Each of these bilingual language pair, we randomly sample 1 million sentence pairs to construct the training set, and use the test and valid set provided by the UNPC corpus. Noticed that although UNPC provides sentence-aligned corpora, we didn't created training sets that are sentence aligned, since the main goal of this thesis is not exploring the joint embedding space of all source languages.
 
 The multilingual settings can be divided into close language pairs (i.e. French + Spanish - English) and distant language pairs (e.g. French + Chinese - English) from a linguistic point of view. The training sets of multilingual translation are shuffled mixtures of corresponding bilingual training sets, thus for multilingual translation with two source input languages, the training set contains 2 million sentence pairs, and so on. We construct the training sets for multilingual translation in such a way to prevent the model from overfitting one source language particularly.
 
@@ -227,9 +227,13 @@ python interactive.py -source_sentence "Violación: uso de cloro gaseoso por el 
 -data_bin "/path/to/your/workspace/UN-bin/multilingual/fres-en/test-es/"
 ```
 
-This will print out the translation. 
+This will print out the translated sentence in the terminal. 
 
 # Analysis
+
+### Statistical Significant Test
+
+### Canonical Correlation Analysis
 
 
 
