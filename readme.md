@@ -313,3 +313,14 @@ cd /path/to/your/workspace/
 
 python cca.py -path_X "/path/to/the/bilingual/attention/matrix/" -path_Y "/path/to/the/multilingual/attention/matrix/"
 ```
+
+# Results
+
+### Experiments on WMT2015 Corpus
+
+### Experiments on United Nations Parallel Corpus
+
+### Attention Alignments
+
+### Statistics of Correlation Coefficients
+
