@@ -306,11 +306,10 @@ do
 done < "$input"
 ```
 
+To compute the correlation coefficients, run:
 
+```shell
+cd /path/to/your/workspace/
 
-
-
-
-
-
-
+python cca.py -path_X "/path/to/the/bilingual/attention/matrix/" -path_Y "/path/to/the/multilingual/attention/matrix/"
+```
