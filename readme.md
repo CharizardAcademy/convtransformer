@@ -318,11 +318,11 @@ python cca.py -path_X "/path/to/the/bilingual/attention/matrix/" -path_Y "/path/
 
 ### Experiments on WMT2015 Corpus
 
-![Results](./README/tab1.png)
+<center>![Results](./README/tab1.png)</center>
 
 ### Experiments on United Nations Parallel Corpus
 
-![Results](./README/tab2.png)
+<center>![Results](./README/tab2.png)</center>
 
 ### 
 
