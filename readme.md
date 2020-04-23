@@ -1,8 +1,8 @@
 <img src="./README/convtransformer-fig-new.png" width="350" >
 
-# A Convolutional Transformer for Character-Level Neural Machine Translation 
+# Character-Level Translation with Self-attention
 
-Code for the paper [Character-Level Translation with Self-attention](https://openreview.net/forum?id=BWlCpme3TS), ACL 2020. 
+Code for the paper [Character-Level Translation with Self-attention](https://openreview.net/forum?id=BWlCpme3TS), accepted at ACL 2020. 
 
 # Corpora and experiments
 
