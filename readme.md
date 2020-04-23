@@ -4,46 +4,39 @@
 
 Code for the paper [Character-Level Translation with Self-attention](https://openreview.net/forum?id=BWlCpme3TS), accepted at ACL 2020. 
 
-# Corpora and experiments
+## Corpora and experiments
 
 We test our model on two corpora:
 
 - the [WMT2015 German - English datasets](http://www.statmt.org/wmt15/translation-task.html)
 - the [United Nations Parallel Corpus (UNPC)](https://conferences.unite.un.org/UNCorpus/). Link to our data. 
 
-# Preparations
+## Preparations
 
-## Install fairseq
+### Install fairseq
 
-We use [fairseq](https://github.com/pytorch/fairseq) ([Ott et al. in 2019](https://arxiv.org/abs/1904.01038)) as a base to implement our model. To install our fairseq snapshot, do the following:
+We use [fairseq](https://github.com/pytorch/fairseq) ([Ott et al. in 2019](https://arxiv.org/abs/1904.01038)) as a base to implement our model. To install our fairseq snapshot, run the following commands:
 
 ```shell
 cd convtransformer/
-
 git clone https://github.com/pytorch/fairseq.git
-
 cd ./fairseq/
-
 pip install -r requirements.txt % install dependencies
-
 python setup.py build % build fairseq
-
 python setup.py develop
 ```
 
-## Data preprocessing
+### Data preprocessing
 
 We use [Moses](https://github.com/moses-smt/mosesdecoder.git) ([Koehn et al. in 2007](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.332.8432&rep=rep1&type=pdf)) to clean and tokenize the data, by appying the following scripts: 
 
 ``` shell
 /mosesdecoder/scripts/tokenizer/remove-non-printing-char.perl
-
 /mosesdecoder/scripts/tokenizer/tokenizer.perl
-
 /mosesdecoder/scripts/training/clean-corpus-n.perl
 ```
 
-## Converting Chinese texts to Wubi texts
+### Converting Chinese texts to Wubi texts
 
 To convert a text of raw Chinese characters into a text of corresponding Wubi codes, run the following commands:
 
@@ -55,7 +48,7 @@ python convert_text.py --input-doc /path/to/the/chinese/text --output-doc /path/
 
 The `convert_text.py` is available at https://github.com/duguyue100/wmt-en2wubi.
 
-## Bilingual Training Data
+### Bilingual Training Data
 
 To construct training sets for bilingual translation, run the following commands (example for UNPC French - English):
 
@@ -69,7 +62,7 @@ cut -d'|' -f1 train.parallel.fr-en > 1mil.train.fr-en.fr
 cut -d'|' -f2 train.parallel.fr-en > 1mil.train.fr-en.en
 ```
 
-## Multilingual Training Data
+### Multilingual Training Data
 
 To construct training sets for multilingual translation, run the following commands (example for UNPC French + Spanish - English):
 
@@ -82,7 +75,7 @@ cut -d'|' -f1 shuffled.train.parallel.fres-en > 2mil.train.fres-en.fres
 cut -d'|' -f2 shuffled.train.parallel.fres-en > 2mil.train.fres-en.en
 ```
 
-## Data Binarization
+### Data Binarization
 
 The next step is binarize the data. Example for UNPC French + Spanish - English: 
 
@@ -115,11 +108,11 @@ python preprocess.py --source-lang fres --targe-lang en \
 --nwordssrc 10000 --nwordstgt 10000
 ```
 
-# Convtransformer model 
+## Convtransformer model 
 
 The model is implemented [here](https://github.com/CharizardAcademy/convtransformer/blob/master/convtransformer/fairseq/models/transformer.py#L768). 
 
-# Training
+## Training
 
 We train our models on 4 NVIDIA 1080x GPUs, using [Adam](https://arxiv.org/abs/1412.6980):  
 
@@ -136,11 +129,11 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py /path/to/your/workspace/ \
 
 where `--ddp-backend=no_c10d`  and `--find-unused-parameters` are crucial arguments to train the convtransformer model. You should change `CUDA_VISIBLE_DEVICES` according to the hardware you have available. 
 
-# Inference
+## Inference
 
 We compute BLEU using Moses. 
 
-## Evaluation on test set
+### Evaluation on test set
 
 As an example, to evaluate the test set, run `conv-multi-fres-en.sh ` to generate translation files of each individual checkpoint. To compute the BLEU score of one translation file, run:
 
@@ -187,7 +180,7 @@ folder=`pwd`
 split_generations $folder 
 ```
 
-## Evaluation on with manual input
+### Evaluation on with manual input
 
 To generate translation by manually inputting the sentence, run:
 
@@ -201,9 +194,9 @@ python interactive.py -source_sentence "Violación: uso de cloro gaseoso por el 
 
 This will print out the translated sentence in the terminal. 
 
-# Analysis
+## Analysis
 
-## Canonical Correlation Analysis
+### Canonical Correlation Analysis
 
 We compute the correlation coefficients with the CCA algorithm using the encoder-decoder attention matrix from the 6.th last model layer. 
 
@@ -241,4 +234,4 @@ cd /path/to/your/workspace/
 python cca.py -path_X "/path/to/the/bilingual/attention/matrix/" -path_Y "/path/to/the/multilingual/attention/matrix/"
 ```
 
-# Citation 
+## Citation 
