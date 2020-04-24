@@ -155,31 +155,6 @@ cd ./split/
 perl multi-bleu.perl generate30.out.ref < generate30.out.sys
 ```
 
-For`generation_split.sh`, copy the following content into the shell:
-
-```shell
-#!/bin/bash
-
-function split_generations ()
-{
-  for file in `ls $1`
-  do
-    if [ -d $1"/"$file ]
-    then
-      readfile $1"/"$file
-    else
-      #echo $1"/"$file
-      grep ^T $1"/"$file | cut -f2- | perl -ple 's{(\S)-(\S)}{$1 ##AT##-##AT## $2}g' > $1"/"$file.ref
-      grep ^H $1"/"$file |cut -f3- | perl -ple 's{(\S)-(\S)}{$1 ##AT##-##AT## $2}g' > $1"/"$file.sys
-   echo `basename $file`
-   fi
-  done
-}
-
-folder=`pwd`
-split_generations $folder 
-```
-
 ### Evaluation on with manual input
 
 To generate translation by manually inputting the sentence, run:
@@ -206,24 +181,6 @@ An an example, to obtain the attention matrices, run:
 cd /path/to/your/workspace/convtransformer/ 
 
 bash attn_matrix.sh
-```
-
-For `attn_matrix.sh`, copy the following commands to the file:
-
-```shell
-#!/bin/bash
-
-input="500-samples.fr"
-linecount="0"
-while IFS= read -r line
-do
-  python interactive.py -source_sentence "$line" -path_checkpoint "../cluster2local-new/checkpoints-bilingual-fr-en/checkpoint30.pt" -data_bin "../UN-bin/bilingual/fr-en/"
-  echo "${linecount}"
-  mkdir "sample_${linecount}"
-  mv attention_*.pt "sample_${linecount}" 
-  mv self-attention.pt "sample_${linecount}"
-  linecount="$(($linecount + 1))"
-done < "$input"
 ```
 
 To compute the correlation coefficients, run:
