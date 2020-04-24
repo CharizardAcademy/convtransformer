@@ -762,7 +762,7 @@ class TransformerDecoderLayer(nn.Module):
     def make_generation_fast_(self, need_attn=False, **kwargs):
         self.need_attn = need_attn
 
-######################################################################################################################################
+###############################################################################################################
 
 @register_model('convtransformer')
 class ConvTransformerModel(FairseqEncoderDecoderModel):
@@ -843,13 +843,8 @@ class ConvTransformerModel(FairseqEncoderDecoderModel):
                                  'Must be used with adaptive_loss criterion'),
         parser.add_argument('--adaptive-softmax-dropout', type=float, metavar='D',
                             help='sets adaptive softmax dropout for the tail projections')
-        parser.add_argument('--context_size', type=int, default=3, help='sets context size for conv layers and max pooling')
-        parser.add_argument('--allow_pooling', action='store_true', default=False, help='allow pooling')
-        parser.add_argument('--allow_shortcut', action='store_true', default=False, help='allow skip connection between encoder and decoder block')
-        parser.add_argument('--allow_downstream_attn', action='store_true', default=False, help='allow downstream attention in the encoder')
-        parser.add_argument('--customize_encoder', action='store_true', default=False, help='customize the encoder structure')
+        parser.add_argument('--context_size', type=int, default=3, help='sets context size for convolutonal layers')
         
-        # fmt: on
 
     @classmethod
     def build_model(cls, args, task):
@@ -912,8 +907,8 @@ class ConvTransformerModel(FairseqEncoderDecoderModel):
 
 class ConvTransformerEncoder(FairseqEncoder):
     """
-    Transformer encoder consisting of *args.encoder_layers* layers. Each layer
-    is a :class:`TransformerEncoderLayer`.
+    ConvTransformer encoder consisting of *args.encoder_layers* layers. Each layer
+    is a :class:`ConvTransformerEncoderLayer`.
 
     Args:
         args (argparse.Namespace): parsed command-line arguments
@@ -939,40 +934,18 @@ class ConvTransformerEncoder(FairseqEncoder):
             args.max_source_positions, embed_dim, self.padding_idx,
             learned=args.encoder_learned_pos,
         ) if not args.no_token_positional_embeddings else None
-        
-        self.enable_shortcut = args.allow_shortcut
-        self.customize_encoder = args.customize_encoder
         self.layers = nn.ModuleList([])
         
-        if self.customize_encoder:
-            for i in range(args.encoder_layers):
-                if i+1 == 3:
-                    args.allow_pooling = True
-                    self.layers.extend([ConvTransformerEncoderLayer(args)])
-                    args.allow_pooling = False
-                else:
-                    args.allow_polling = False
-                    self.layers.extend([ConvTransformerEncoderLayer(args)])
-        else:
-            self.layers.extend([
-                ConvTransformerEncoderLayer(args)
-                for i in range(args.encoder_layers)
-            ])
+        self.layers.extend([
+            ConvTransformerEncoderLayer(args)
+            for i in range(args.encoder_layers)
+           
 
         if args.encoder_normalize_before:
             self.layer_norm = LayerNorm(embed_dim)
         else:
             self.layer_norm = None
 
-        '''
-        self.conv = nn.Conv1d(in_channels=embed_dim, out_channels=embed_dim, kernel_size=(self.context_size, ), padding=(self.context_size-1)//2)
-
-        self.self_attn = MultiheadAttention(
-            embed_dim, args.encoder_attention_heads,
-            dropout=args.attention_dropout, self_attention=True
-        )
-        '''
-        
 
     def forward(self, src_tokens, src_lengths):
         """
@@ -1002,47 +975,22 @@ class ConvTransformerEncoder(FairseqEncoder):
         encoder_padding_mask = src_tokens.eq(self.padding_idx)
         if not encoder_padding_mask.any():
             encoder_padding_mask = None
-
-        '''
-        x = x.transpose(1,2)
-        x = self.conv(x)
-        x = x.transpose(1,2)
-        x = self.conv_layer_norm(x) # x has here size [seq_len, batch_size, dim]
-        
-        x_self_attn_out, _ = self.self_attn(query=x, key=x, value=x, key_padding_mask=encoder_padding_mask)
-        '''
         
         if self.layer_norm:
             x = x + self.layer_norm(x)
         x = F.dropout(x, p=self.dropout, training=self.training) 
 
-        # encoder layers
-        if self.enable_shortcut:
-            encoder_outputs = []
-            encoder_padding_masks = []
-            for layer in self.layers:
-                x, new_mask = layer(x, encoder_padding_mask)
-                if self.layer_norm:
-                    x = self.layer_norm(x)
-                encoder_padding_mask = new_mask
-                encoder_padding_masks.append(new_mask)
-                encoder_outputs.append(x)
+        
+        for layer in self.layers:
+            x, encoder_padding_mask = layer(x, encoder_padding_mask)
 
-            return {
-                'encoder_out': encoder_outputs,  # T x B x C
-                'encoder_padding_mask': encoder_padding_masks,  # B x T
-            }
-        else:
-            for layer in self.layers:
-                x, encoder_padding_mask = layer(x, encoder_padding_mask)
-
-            if self.layer_norm:
-                x = self.layer_norm(x)
+        if self.layer_norm:
+            x = self.layer_norm(x)
             
-            return {
-                'encoder_out': x,  # T x B x C
-                'encoder_padding_mask': encoder_padding_mask,  # B x T
-            }
+        return {
+            'encoder_out': x,  # T x B x C
+            'encoder_padding_mask': encoder_padding_mask,  # B x T
+        }
 
     def reorder_encoder_out(self, encoder_out, new_order):
         """
@@ -1225,24 +1173,14 @@ class ConvTransformerDecoder(FairseqIncrementalDecoder):
         # decoder layers
         # for layer in self.layers:
         for i in range(len(self.layers)):
-            if encoder_out['encoder_out'] is not None and isinstance(encoder_out['encoder_out'], list):
-                x, attn = self.layers[i](
-                    x,
-                    encoder_out['encoder_out'][i] if encoder_out is not None else None,
-                    encoder_out['encoder_padding_mask'][i] if encoder_out is not None else None,
-                    incremental_state,
-                    self_attn_mask=self.buffered_future_mask(x) if incremental_state is None else None,
-                )
-                inner_states.append(x)
-            else:
-                x, attn = self.layers[i](
-                    x,
-                    encoder_out['encoder_out'] if encoder_out is not None else None,
-                    encoder_out['encoder_padding_mask'] if encoder_out is not None else None,
-                    incremental_state,
-                    self_attn_mask=self.buffered_future_mask(x) if incremental_state is None else None,
-                )
-                inner_states.append(x)
+            x, attn = self.layers[i](
+                x,
+                encoder_out['encoder_out'] if encoder_out is not None else None,
+                encoder_out['encoder_padding_mask'] if encoder_out is not None else None,
+                incremental_state,
+                self_attn_mask=self.buffered_future_mask(x) if incremental_state is None else None,
+            )
+            inner_states.append(x)
 
         if self.layer_norm:
             x = self.layer_norm(x)
@@ -1335,12 +1273,6 @@ class ConvTransformerEncoderLayer(nn.Module):
             self.embed_dim, args.encoder_attention_heads,
             dropout=args.attention_dropout, self_attention=True, 
         )
-        self.allow_downstream_attn = args.allow_downstream_attn
-        if self.allow_downstream_attn:
-            self.backtrace_attn = MultiheadAttention(
-                self.embed_dim, args.encoder_attention_heads,
-                dropout=args.attention_dropout, self_attention=True, 
-            )
         
         self.self_attn_layer_norm = LayerNorm(self.embed_dim)
         self.dropout = args.dropout
@@ -1367,9 +1299,6 @@ class ConvTransformerEncoderLayer(nn.Module):
         self.leakyrelu4 = nn.LeakyReLU(negative_slope=0.01, inplace=True)
         self.conv4 = nn.Conv1d(in_channels=self.embed_dim*3, out_channels=self.embed_dim, kernel_size=(self.context_size, ), padding=(self.context_size-1)//2)
 
-        self.enable_pooling = args.allow_pooling
-        if self.enable_pooling:
-            self.maxpool = nn.MaxPool1d(kernel_size=(self.context_size, ))
         self.conv_layer_norm = LayerNorm(self.embed_dim)
         
 
@@ -1419,8 +1348,7 @@ class ConvTransformerEncoderLayer(nn.Module):
         x2 = self.conv2(x2)
         x2 = self.conv2_sep(x2)
         x2 = self.leakyrelu2(x2)
-        if self.enable_pooling:
-            x2 = self.maxpool(x2)
+        
         x2 = x2.transpose(1,2)
         x2 = x2.transpose(0,1)
 
@@ -1429,8 +1357,7 @@ class ConvTransformerEncoderLayer(nn.Module):
         x3 = self.conv3(x3)
         x3 = self.conv3_sep(x3)
         x3 = self.leakyrelu3(x3)
-        if self.enable_pooling:
-            x3 = self.maxpool(x3)
+        
         x3 = x3.transpose(1,2)
         x3 = x3.transpose(0,1)
 
@@ -1444,26 +1371,12 @@ class ConvTransformerEncoderLayer(nn.Module):
 
         x = x_org + x
 
-        if encoder_padding_mask is not None and self.enable_pooling:
-            encoder_padding_mask = encoder_padding_mask.type('torch.DoubleTensor')
-            encoder_padding_mask = torch.unsqueeze(encoder_padding_mask, dim=1)
-            encoder_padding_mask = self.maxpool(encoder_padding_mask)
-            encoder_padding_mask = torch.squeeze(encoder_padding_mask, dim=1)
-            encoder_padding_mask = encoder_padding_mask.type('torch.ByteTensor')
-            encoder_padding_mask = encoder_padding_mask.cuda()
-            if encoder_padding_mask.any():
-                encoder_padding_mask = None
-
         x_norm = self.maybe_layer_norm(self.self_attn_layer_norm, x, before=True)
         x_self_attn, _ = self.self_attn(query=x_norm, key=x_norm, value=x_norm, key_padding_mask=encoder_padding_mask)
         x_self_attn_dropout = F.dropout(x_self_attn, p=self.dropout, training=self.training)
         
-        if self.allow_downstream_attn:
-            x_backtrace_attn, _ = self.backtrace_attn(query=x_norm, key=x_org, value=x_org, key_padding_mask=encoder_padding_mask)
-            x_backtrace_attn_dropout = F.dropout(x_backtrace_attn, p=self.dropout, training=self.training)
-            residual = x_norm + x_self_attn_dropout + x_backtrace_attn_dropout
-        else:
-            residual = x_norm + x_self_attn_dropout
+        
+        residual = x_norm + x_self_attn_dropout
 
         x = residual
         x = self.activation_fn(self.fc1(x))
@@ -1702,10 +1615,6 @@ def convtransformer(args):
     args.decoder_output_dim = getattr(args, 'decoder_output_dim', args.decoder_embed_dim)
     args.decoder_input_dim = getattr(args, 'decoder_input_dim', args.decoder_embed_dim)
     args.context_size = getattr(args, 'context_size', 3)
-    args.allow_pooling = getattr(args, 'allow_pooling', True)
-    args.allow_shortcut = getattr(args, 'allow_shortcut', True)
-    args.allow_downstream_attn = getattr(args, 'allow_downstream_attn', False)
-    args.customize_encoder = getattr(args, 'customize_encoder', True)
 
 
 @register_model_architecture('transformer', 'transformer_iwslt_de_en')
