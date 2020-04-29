@@ -1286,6 +1286,8 @@ class ConvTransformerEncoderLayer(nn.Module):
         self.fc1 = Linear(self.embed_dim, args.encoder_ffn_embed_dim)
         self.fc2 = Linear(args.encoder_ffn_embed_dim, self.embed_dim)
         self.final_layer_norm = LayerNorm(self.embed_dim)
+        # define the three convolutional layers with different context sizes
+        # the convolutions are implemented as separable convolutions for reducing the number of model parameters
         self.conv1 = nn.Conv1d(in_channels=self.embed_dim, out_channels=self.embed_dim, groups=self.embed_dim, kernel_size=(self.context_size, ), padding=(self.context_size-1)//2)
         self.conv1_sep = nn.Conv1d(in_channels=self.embed_dim, out_channels=self.embed_dim, kernel_size=1)
         self.conv2 = nn.Conv1d(in_channels=self.embed_dim, out_channels=self.embed_dim, groups=self.embed_dim, kernel_size=(self.context_size+2, ), padding=(self.context_size+2-1)//2)
@@ -1296,6 +1298,7 @@ class ConvTransformerEncoderLayer(nn.Module):
         self.leakyrelu2 = nn.LeakyReLU(negative_slope=0.01, inplace=True)
         self.leakyrelu3 = nn.LeakyReLU(negative_slope=0.01, inplace=True)
         self.leakyrelu4 = nn.LeakyReLU(negative_slope=0.01, inplace=True)
+        # conv4 here is a standard convolution layer, for reshape the concatenation
         self.conv4 = nn.Conv1d(in_channels=self.embed_dim*3, out_channels=self.embed_dim, kernel_size=(self.context_size, ), padding=(self.context_size-1)//2)
 
         self.conv_layer_norm = LayerNorm(self.embed_dim)
@@ -1360,6 +1363,7 @@ class ConvTransformerEncoderLayer(nn.Module):
         x3 = x3.transpose(1,2)
         x3 = x3.transpose(0,1)
 
+        # combine the outputs of convolutional layers with different context size
         x = torch.cat((x1, x2, x3), 2)
         x = x.transpose(0,1)
         x = x.transpose(1,2)
@@ -1368,8 +1372,10 @@ class ConvTransformerEncoderLayer(nn.Module):
         x = x.transpose(1,2)
         x = x.transpose(0,1)
 
+        # residual connection
         x = x_org + x
 
+        # below is the same as the traditional transformer
         x_norm = self.maybe_layer_norm(self.self_attn_layer_norm, x, before=True)
         x_self_attn, _ = self.self_attn(query=x_norm, key=x_norm, value=x_norm, key_padding_mask=encoder_padding_mask)
         x_self_attn_dropout = F.dropout(x_self_attn, p=self.dropout, training=self.training)
