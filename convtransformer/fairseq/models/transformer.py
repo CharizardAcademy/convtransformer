@@ -980,7 +980,6 @@ class ConvTransformerEncoder(FairseqEncoder):
             x = x + self.layer_norm(x)
         x = F.dropout(x, p=self.dropout, training=self.training) 
 
-        
         for layer in self.layers:
             x, encoder_padding_mask = layer(x, encoder_padding_mask)
 
@@ -1374,7 +1373,6 @@ class ConvTransformerEncoderLayer(nn.Module):
         x_norm = self.maybe_layer_norm(self.self_attn_layer_norm, x, before=True)
         x_self_attn, _ = self.self_attn(query=x_norm, key=x_norm, value=x_norm, key_padding_mask=encoder_padding_mask)
         x_self_attn_dropout = F.dropout(x_self_attn, p=self.dropout, training=self.training)
-        
         
         residual = x_norm + x_self_attn_dropout
 
