@@ -26,6 +26,8 @@ python setup.py build % build fairseq
 python setup.py develop
 ```
 
+To make Fairseq work on the character-level, we modify `tokenizer.py` [here](https://github.com/CharizardAcademy/convtransformer/blob/master/convtransformer/fairseq/tokenizer.py#L16). 
+
 ### Data preprocessing
 
 We use [Moses](https://github.com/moses-smt/mosesdecoder.git) ([Koehn et al. in 2007](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.332.8432&rep=rep1&type=pdf)) to clean and tokenize the data, by appying the following scripts: 
@@ -192,3 +194,12 @@ python cca.py -path_X "/path/to/the/bilingual/attention/matrix/" -path_Y "/path/
 ```
 
 ## Citation 
+
+```
+@inproceedings{gao2020character,
+  title={Character-level Translation with Self-attention},
+  author={Yingqiang Gao and Nikola I. Nikolov and Yuhuang Hu and Richard H.R. Hahnloser},
+  booktitle={Proceedings of ACL},
+  year={2020}
+}
+```
