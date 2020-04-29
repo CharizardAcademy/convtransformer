@@ -8,8 +8,8 @@ Code for the paper [Character-Level Translation with Self-attention](https://ope
 
 We test our model on two corpora:
 
-- the [WMT2015 German - English datasets](http://www.statmt.org/wmt15/translation-task.html)
-- the [United Nations Parallel Corpus (UNPC)](https://conferences.unite.un.org/UNCorpus/). Link to our data. 
+- the [WMT2015 German - English dataset](http://www.statmt.org/wmt15/translation-task.html). We use the original dataset.
+- the [United Nations Parallel Corpus (UNPC)](https://conferences.unite.un.org/UNCorpus/). [Link to our data](https://drive.google.com/file/d/1PT7sAAjVKHWpU9pIvmL7UJC9vhquxLg0/view?usp=sharing) 
 
 ## Preparations
 
@@ -197,9 +197,10 @@ python cca.py -path_X "/path/to/the/bilingual/attention/matrix/" -path_Y "/path/
 
 ```
 @inproceedings{gao2020character,
-  title={Character-level Translation with Self-attention},
+  title={Character-level {T}ranslation with {S}elf-attention},
   author={Yingqiang Gao and Nikola I. Nikolov and Yuhuang Hu and Richard H.R. Hahnloser},
-  booktitle={Proceedings of ACL},
+  booktitle={Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics},
+  publisher = "Association for Computational Linguistics",
   year={2020}
 }
 ```
