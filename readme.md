@@ -2,7 +2,7 @@
 
 # Character-Level Translation with Self-attention
 
-Code for the paper [Character-Level Translation with Self-attention](https://openreview.net/forum?id=BWlCpme3TS), accepted at ACL 2020. 
+Code for the paper [Character-Level Translation with Self-attention](https://arxiv.org/abs/2004.14788), accepted at ACL 2020. 
 
 ## Corpora and experiments
 
