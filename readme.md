@@ -95,7 +95,7 @@ cd convtransformer/
 python preprocess.py --source-lang fres --target-lang en \
 --trainpref UN-processed/multilingual/fres-en/test-fr/2mil.train.fres-en/ \
 --validpref UN-processed/multilingual/fres-en/test-fr/2mil.valid.fres-en/ \
---testpref UN-processed/multilingual/fres-en/test-fr/2mil.test.fres-en/ \
+--testpref UN-processed/multilingual/fres-en/test-fr/2mil.test.fres-en.fr/ \
 --destdir UN-bin/multilingual/fres-en/test-fr/ \ 
 --nwordssrc 10000 --nwordstgt 10000 
 ```
