@@ -935,11 +935,11 @@ class ConvTransformerEncoder(FairseqEncoder):
             learned=args.encoder_learned_pos,
         ) if not args.no_token_positional_embeddings else None
         self.layers = nn.ModuleList([])
-        
+
         self.layers.extend([
             ConvTransformerEncoderLayer(args)
             for i in range(args.encoder_layers)
-           
+        ])
 
         if args.encoder_normalize_before:
             self.layer_norm = LayerNorm(embed_dim)
