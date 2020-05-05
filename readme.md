@@ -19,7 +19,7 @@ We use [fairseq](https://github.com/pytorch/fairseq) ([Ott et al. in 2019](https
 
 ```shell
 cd convtransformer/
-git clone https://github.com/pytorch/fairseq.git
+git clone https://github.com/CharizardAcademy/convtransformer.git
 cd ./fairseq/
 pip install -r requirements.txt % install dependencies
 python setup.py build % build fairseq
@@ -59,6 +59,7 @@ cd /path/to/your/workspace/UN-corpora/
 cd ./en-fr
 
 paste -d'|' UNv1.0.en-fr.fr UNv1.0.en-fr.en | cat -n |shuf -n 1000000 | sort -n | cut -f2 > train.parallel.fr-en
+
 
 cut -d'|' -f1 train.parallel.fr-en > 1mil.train.fr-en.fr
 cut -d'|' -f2 train.parallel.fr-en > 1mil.train.fr-en.en
