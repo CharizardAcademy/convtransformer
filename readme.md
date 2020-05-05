@@ -106,7 +106,7 @@ python preprocess.py --source-lang fres --target-lang en \
 python preprocess.py --source-lang fres --targe-lang en \
 --trainpref UN-processed/multilingual/fres-en/test-es/2mil.train.fres-en/ \
 --validpref UN-processed/multilingual/fres-en/test-es/2mil.valid.fres-en/ \
---testpref UN-processed/multilingual/fres-en/test-es/2mil.test.fres-en/ \
+--testpref UN-processed/multilingual/fres-en/test-es/2mil.test.fres-en.es/ \
 --destdir UN-bin/multilingual/fres-en/test-es/ \
 --nwordssrc 10000 --nwordstgt 10000
 ```
