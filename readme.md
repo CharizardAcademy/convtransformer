@@ -21,8 +21,8 @@ We use [fairseq](https://github.com/pytorch/fairseq) ([Ott et al. in 2019](https
 cd convtransformer/
 git clone https://github.com/CharizardAcademy/convtransformer.git
 cd ./fairseq/
-pip install -r requirements.txt % install dependencies
-python setup.py build % build fairseq
+pip install -r requirements.txt # install dependencies
+python setup.py build # build fairseq
 python setup.py develop
 ```
 

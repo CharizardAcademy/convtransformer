@@ -1340,8 +1340,7 @@ class ConvTransformerEncoderLayer(nn.Module):
         x1 = self.conv1(x1)
         x1 = self.conv1_sep(x1)
         x1 = self.leakyrelu1(x1)
-        if self.enable_pooling:
-            x1 = self.maxpool(x1)
+        
         x1 = x1.transpose(1,2)
         x1 = x1.transpose(0,1)
 
