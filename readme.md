@@ -8,19 +8,17 @@ Code for the paper [Character-Level Translation with Self-attention](https://arx
 
 We test our model on two corpora:
 
-- the [WMT2015 German - English dataset](http://www.statmt.org/wmt15/translation-task.html). We use the original dataset.
+- the [WMT2015 German - English dataset](http://www.statmt.org/wmt15/translation-task.html). We use the original dataset. [Link to our data](https://drive.google.com/file/d/14C03svrgADJAt0spZljGb40JYzVQIafb/view?usp=sharing)
 - the [United Nations Parallel Corpus (UNPC)](https://conferences.unite.un.org/UNCorpus/). [Link to our data](https://drive.google.com/file/d/1PT7sAAjVKHWpU9pIvmL7UJC9vhquxLg0/view?usp=sharing) 
 
 ## Preparations
 
-### Install fairseq
+### Download our code and install our version of Fairseq
 
 We use [fairseq](https://github.com/pytorch/fairseq) ([Ott et al. in 2019](https://arxiv.org/abs/1904.01038)) as a base to implement our model. To install our fairseq snapshot, run the following commands:
 
 ```shell
-cd convtransformer/
 git clone https://github.com/CharizardAcademy/convtransformer.git
-cd ./fairseq/
 pip install -r requirements.txt # install dependencies
 python setup.py build # build fairseq
 python setup.py develop
