@@ -125,7 +125,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py /path/to/your/workspace/data/ \
 --min-lr 1e-09 --criterion label_smoothed_cross_entropy --label-smoothing 0.1 \
 --weight-decay 0.0 --max-tokens 3000  \
 --save-dir /cluster/scratch/username/checkpoints-conv-multi-fres-en/ \
---no-progress-bar --log-format simple --log-interval 2000 --allow_shortcut \
+--no-progress-bar --log-format simple --log-interval 2000 \
 --find-unused-parameters --ddp-backend=no_c10d
 ```
 
