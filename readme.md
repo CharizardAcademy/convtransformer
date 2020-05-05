@@ -83,20 +83,20 @@ cut -d'|' -f2 shuffled.train.parallel.fres-en > 2mil.train.fres-en.en
 The next step is binarize the data. Example for UNPC French + Spanish - English: 
 
 ``` shell
-mkdir /path/to/your/workspace/all-data/UN-bin/multilingual/fres-en/test-fr/
-mkdir /path/to/your/workspace/all-data/UN-bin/multilingual/fres-en/test-es/
+mkdir /all-data/UN-bin/multilingual/fres-en/test-fr/
+mkdir /all-data/UN-bin/multilingual/fres-en/test-es/
 
-cd /path/to/your/workspcae/convtransformer/
+cd /convtransformer/
 ```
 
 **evaluation on French input** 
 
 ```shell
 python preprocess.py --source-lang fres --target-lang en \
---trainpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.train.fres-en/ \
---validpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.valid.fres-en/ \
---testpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-fr/2mil.test.fres-en/ \
---destdir /path/to/your/workspace/UN-bin/multilingual/fres-en/test-fr/ \ 
+--trainpref /UN-processed/multilingual/fres-en/test-fr/2mil.train.fres-en/ \
+--validpref /UN-processed/multilingual/fres-en/test-fr/2mil.valid.fres-en/ \
+--testpref /UN-processed/multilingual/fres-en/test-fr/2mil.test.fres-en/ \
+--destdir /UN-bin/multilingual/fres-en/test-fr/ \ 
 --nwordssrc 10000 --nwordstgt 10000 
 ```
 
@@ -104,10 +104,10 @@ python preprocess.py --source-lang fres --target-lang en \
 
 ```shell
 python preprocess.py --source-lang fres --targe-lang en \
---trainpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.train.fres-en/ \
---validpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.valid.fres-en/ \
---testpref /path/to/your/workspace/all-data/UN-processed/multilingual/fres-en/test-es/2mil.test.fres-en/ \
---destdir /path/to/your/workspace/UN-bin/multilingual/fres-en/test-es/ \
+--trainpref /UN-processed/multilingual/fres-en/test-es/2mil.train.fres-en/ \
+--validpref /UN-processed/multilingual/fres-en/test-es/2mil.valid.fres-en/ \
+--testpref /UN-processed/multilingual/fres-en/test-es/2mil.test.fres-en/ \
+--destdir /UN-bin/multilingual/fres-en/test-es/ \
 --nwordssrc 10000 --nwordstgt 10000
 ```
 
@@ -120,7 +120,7 @@ The model is implemented [here](https://github.com/CharizardAcademy/convtransfor
 We train our models on 4 NVIDIA 1080x GPUs, using [Adam](https://arxiv.org/abs/1412.6980):  
 
 ```shell
-CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py /path/to/your/workspace/data/ \
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py /UN-bin/multilingual/fres-en/test-es/ \
 --arch convtransformer --optimizer adam --adam-betas '(0.9, 0.98)' --clip-norm 0.0 \
 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates 4000 --lr 0.0001 \
 --min-lr 1e-09 --criterion label_smoothed_cross_entropy --label-smoothing 0.1 \
@@ -141,7 +141,7 @@ We compute BLEU using Moses.
 As an example, to evaluate the test set, run `conv-multi-fres-en.sh ` to generate translation files of each individual checkpoint. To compute the BLEU score of one translation file, run:
 
 ```shell
-cd /path/to/your/workspace/geneations/conv-multi-fres-en/
+cd /geneations/conv-multi-fres-en/
 cd ./test-fr/
 
 bash geneation_split.sh
@@ -166,8 +166,8 @@ To generate translation by manually inputting the sentence, run:
 cd /path/to/your/workspace/convtransformer/
 
 python interactive.py -source_sentence "Violación: uso de cloro gaseoso por el régimen sirio." \ 
--path_checkpoint "/path/to/your/workspace/checkpoints-conv-multi-fres-en/checkpoint30.pt" \
--data_bin "/path/to/your/workspace/UN-bin/multilingual/fres-en/test-es/"
+-path_checkpoint "/checkpoints-conv-multi-fres-en/checkpoint30.pt" \
+-data_bin "/UN-bin/multilingual/fres-en/test-es/"
 ```
 
 This will print out the translated sentence in the terminal. 
@@ -191,7 +191,7 @@ To compute the correlation coefficients, run:
 ```shell
 cd /path/to/your/workspace/
 
-python cca.py -path_X "/path/to/the/bilingual/attention/matrix/" -path_Y "/path/to/the/multilingual/attention/matrix/"
+python cca.py -path_X "/bilingual/attention/matrix/" -path_Y "/multilingual/attention/matrix/"
 ```
 
 ## Citation 
