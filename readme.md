@@ -33,9 +33,9 @@ To make Fairseq work on the character-level, we modify `tokenizer.py` [here](htt
 We use [Moses](https://github.com/moses-smt/mosesdecoder.git) ([Koehn et al. in 2007](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.332.8432&rep=rep1&type=pdf)) to clean and tokenize the data, by appying the following scripts: 
 
 ``` shell
-/mosesdecoder/scripts/tokenizer/remove-non-printing-char.perl
-/mosesdecoder/scripts/tokenizer/tokenizer.perl
-/mosesdecoder/scripts/training/clean-corpus-n.perl
+mosesdecoder/scripts/tokenizer/remove-non-printing-char.perl
+mosesdecoder/scripts/tokenizer/tokenizer.perl
+mosesdecoder/scripts/training/clean-corpus-n.perl
 ```
 
 ### Converting Chinese texts to Wubi texts
@@ -43,9 +43,9 @@ We use [Moses](https://github.com/moses-smt/mosesdecoder.git) ([Koehn et al. in 
 To convert a text of raw Chinese characters into a text of corresponding Wubi codes, run the following commands:
 
 ```shell
-cd /path/to/your/workspace/convtransformer/
+cd convtransformer/
 
-python convert_text.py --input-doc /path/to/the/chinese/text --output-doc /path/to/the/wubi/text --convert-type ch2wb
+python convert_text.py --input-doc path/to/the/chinese/text --output-doc path/to/the/wubi/text --convert-type ch2wb
 ```
 
 The `convert_text.py` is available at https://github.com/duguyue100/wmt-en2wubi.
@@ -55,7 +55,7 @@ The `convert_text.py` is available at https://github.com/duguyue100/wmt-en2wubi.
 To construct training sets for bilingual translation, run the following commands (example for UNPC French - English):
 
 ```shell
-cd /path/to/your/workspace/UN-corpora/
+cd UN-corpora/
 cd ./en-fr
 
 paste -d'|' UNv1.0.en-fr.fr UNv1.0.en-fr.en | cat -n |shuf -n 1000000 | sort -n | cut -f2 > train.parallel.fr-en
@@ -83,20 +83,20 @@ cut -d'|' -f2 shuffled.train.parallel.fres-en > 2mil.train.fres-en.en
 The next step is binarize the data. Example for UNPC French + Spanish - English: 
 
 ``` shell
-mkdir /all-data/UN-bin/multilingual/fres-en/test-fr/
-mkdir /all-data/UN-bin/multilingual/fres-en/test-es/
+mkdir UN-bin/multilingual/fres-en/test-fr/
+mkdir UN-bin/multilingual/fres-en/test-es/
 
-cd /convtransformer/
+cd convtransformer/
 ```
 
 **evaluation on French input** 
 
 ```shell
 python preprocess.py --source-lang fres --target-lang en \
---trainpref /UN-processed/multilingual/fres-en/test-fr/2mil.train.fres-en/ \
---validpref /UN-processed/multilingual/fres-en/test-fr/2mil.valid.fres-en/ \
---testpref /UN-processed/multilingual/fres-en/test-fr/2mil.test.fres-en/ \
---destdir /UN-bin/multilingual/fres-en/test-fr/ \ 
+--trainpref UN-processed/multilingual/fres-en/test-fr/2mil.train.fres-en/ \
+--validpref UN-processed/multilingual/fres-en/test-fr/2mil.valid.fres-en/ \
+--testpref UN-processed/multilingual/fres-en/test-fr/2mil.test.fres-en/ \
+--destdir UN-bin/multilingual/fres-en/test-fr/ \ 
 --nwordssrc 10000 --nwordstgt 10000 
 ```
 
@@ -104,10 +104,10 @@ python preprocess.py --source-lang fres --target-lang en \
 
 ```shell
 python preprocess.py --source-lang fres --targe-lang en \
---trainpref /UN-processed/multilingual/fres-en/test-es/2mil.train.fres-en/ \
---validpref /UN-processed/multilingual/fres-en/test-es/2mil.valid.fres-en/ \
---testpref /UN-processed/multilingual/fres-en/test-es/2mil.test.fres-en/ \
---destdir /UN-bin/multilingual/fres-en/test-es/ \
+--trainpref UN-processed/multilingual/fres-en/test-es/2mil.train.fres-en/ \
+--validpref UN-processed/multilingual/fres-en/test-es/2mil.valid.fres-en/ \
+--testpref UN-processed/multilingual/fres-en/test-es/2mil.test.fres-en/ \
+--destdir UN-bin/multilingual/fres-en/test-es/ \
 --nwordssrc 10000 --nwordstgt 10000
 ```
 
@@ -120,12 +120,12 @@ The model is implemented [here](https://github.com/CharizardAcademy/convtransfor
 We train our models on 4 NVIDIA 1080x GPUs, using [Adam](https://arxiv.org/abs/1412.6980):  
 
 ```shell
-CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py /UN-bin/multilingual/fres-en/test-es/ \
+CUDA_VISIBLE_DEVICES=0,1,2,3 python train.py UN-bin/multilingual/fres-en/test-es/ \
 --arch convtransformer --optimizer adam --adam-betas '(0.9, 0.98)' --clip-norm 0.0 \
 --lr-scheduler inverse_sqrt --warmup-init-lr 1e-07 --warmup-updates 4000 --lr 0.0001 \
 --min-lr 1e-09 --criterion label_smoothed_cross_entropy --label-smoothing 0.1 \
 --weight-decay 0.0 --max-tokens 3000  \
---save-dir /cluster/scratch/username/checkpoints-conv-multi-fres-en/ \
+--save-dir checkpoints-conv-multi-fres-en/ \
 --no-progress-bar --log-format simple --log-interval 2000 \
 --find-unused-parameters --ddp-backend=no_c10d
 ```
@@ -141,7 +141,7 @@ We compute BLEU using Moses.
 As an example, to evaluate the test set, run `conv-multi-fres-en.sh ` to generate translation files of each individual checkpoint. To compute the BLEU score of one translation file, run:
 
 ```shell
-cd /geneations/conv-multi-fres-en/
+cd geneations/conv-multi-fres-en/
 cd ./test-fr/
 
 bash geneation_split.sh
@@ -163,11 +163,11 @@ perl multi-bleu.perl generate30.out.ref < generate30.out.sys
 To generate translation by manually inputting the sentence, run:
 
 ```shell
-cd /path/to/your/workspace/convtransformer/
+cd convtransformer/
 
 python interactive.py -source_sentence "Violación: uso de cloro gaseoso por el régimen sirio." \ 
--path_checkpoint "/checkpoints-conv-multi-fres-en/checkpoint30.pt" \
--data_bin "/UN-bin/multilingual/fres-en/test-es/"
+-path_checkpoint "checkpoints-conv-multi-fres-en/checkpoint30.pt" \
+-data_bin "UN-bin/multilingual/fres-en/test-es/"
 ```
 
 This will print out the translated sentence in the terminal. 
@@ -181,7 +181,7 @@ We compute the correlation coefficients with the CCA algorithm using the encoder
 An an example, to obtain the attention matrices, run:
 
 ```shell
-cd /path/to/your/workspace/convtransformer/ 
+cd convtransformer/ 
 
 bash attn_matrix.sh
 ```
@@ -189,8 +189,6 @@ bash attn_matrix.sh
 To compute the correlation coefficients, run:
 
 ```shell
-cd /path/to/your/workspace/
-
 python cca.py -path_X "/bilingual/attention/matrix/" -path_Y "/multilingual/attention/matrix/"
 ```
 
