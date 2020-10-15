@@ -1,38 +1,54 @@
-#!/usr/bin/env python3 -u
-# Copyright (c) 2017-present, Facebook, Inc.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the LICENSE file in
-# the root directory of this source tree. An additional grant of patent rights
-# can be found in the PATENTS file in the same directory.
-"""
-Translate raw text with a trained model. Batches data on-the-fly.
-"""
+'''
+This file is a modified version of `interactive.py` found in the github repo for
+Fairseq, at https://github.com/pytorch/fairseq
+
+Last modified on 5th July 2019 by Sharad Duwal <[sharad] [.] [duwal] [at] [gmail] [dot] [com]> 
+
+Below is the license this modification is done under.
+
+BSD License
+
+For fairseq software
+
+Copyright (c) 2017-present, Facebook, Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+ * Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+ * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+ * Neither the name Facebook nor the names of its contributors may be used to
+    endorse or promote products derived from this software without specific
+       prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+'''
 
 from collections import namedtuple
-import fileinput
 
 import torch
 
 from fairseq import checkpoint_utils, options, tasks, utils
 
+import argparse
 
 Batch = namedtuple('Batch', 'ids src_tokens src_lengths')
 Translation = namedtuple('Translation', 'src_str hypos pos_scores alignments')
-
-
-def buffered_read(input, buffer_size):
-    buffer = []
-    with fileinput.input(files=[input], openhook=fileinput.hook_encoded("utf-8")) as h:
-        for src_str in h:
-            buffer.append(src_str.strip())
-            if len(buffer) >= buffer_size:
-                yield buffer
-                buffer = []
-
-    if len(buffer) > 0:
-        yield buffer
-
 
 def make_batches(lines, args, task, max_positions, encode_fn):
     tokens = [
@@ -54,84 +70,79 @@ def make_batches(lines, args, task, max_positions, encode_fn):
             src_tokens=batch['net_input']['src_tokens'], src_lengths=batch['net_input']['src_lengths'],
         )
 
-
-def main(args):
-    utils.import_user_module(args)
-
-    if args.buffer_size < 1:
-        args.buffer_size = 1
-    if args.max_tokens is None and args.max_sentences is None:
-        args.max_sentences = 1
-
-    assert not args.sampling or args.nbest == args.beam, \
-        '--sampling requires --nbest to be equal to --beam'
-    assert not args.max_sentences or args.max_sentences <= args.buffer_size, \
-        '--max-sentences/--batch-size cannot be larger than --buffer-size'
-
-    print(args)
-
-    use_cuda = torch.cuda.is_available() and not args.cpu
-
-    # Setup task, e.g., translation
-    task = tasks.setup_task(args)
-
-    # Load ensemble
-    print('| loading model(s) from {}'.format(args.path))
-    models, _model_args = checkpoint_utils.load_model_ensemble(
-        args.path.split(':'),
-        arg_overrides=eval(args.model_overrides),
-        task=task,
-    )
-
-    # Set dictionaries
-    src_dict = task.source_dictionary
-    tgt_dict = task.target_dictionary
-
-    # Optimize ensemble for generation
-    for model in models:
-        model.make_generation_fast_(
-            beamable_mm_beam_size=None if args.no_beamable_mm else args.beam,
-            need_attn=args.print_alignment,
+class Generator():
+    def __init__(self, data_path, checkpoint_path="checkpoint_best.pt"):
+        self.parser = options.get_generation_parser(interactive=True)
+        self.parser.set_defaults(path=checkpoint_path,
+            remove_bpe="sentencepiece", dataset_impl="lazy", num_wokers=5
         )
-        if args.fp16:
-            model.half()
-        if use_cuda:
-            model.cuda()
-
-    # Initialize generator
-    generator = task.build_generator(args)
-
-    # Hack to support GPT-2 BPE
-    if args.remove_bpe == 'gpt2':
-        from fairseq.gpt2_bpe.gpt2_encoding import get_encoder
-        decoder = get_encoder(
-            'fairseq/gpt2_bpe/encoder.json',
-            'fairseq/gpt2_bpe/vocab.bpe',
+        self.args = options.parse_args_and_arch(self.parser, 
+            input_args=[data_path]
         )
-        encode_fn = lambda x: ' '.join(map(str, decoder.encode(x)))
-    else:
-        decoder = None
-        encode_fn = lambda x: x
 
-    # Load alignment dictionary for unknown word replacement
-    # (None if no unknown word replacement, empty if no path to align dictionary)
-    align_dict = utils.load_align_dict(args.replace_unk)
+        utils.import_user_module(self.args)
 
-    max_positions = utils.resolve_max_positions(
-        task.max_positions(),
-        *[model.max_positions() for model in models]
-    )
+        if self.args.buffer_size < 1:
+            self.args.buffer_size = 1
+        if self.args.max_tokens is None and self.args.max_sentences is None:
+            self.args.max_sentences = 1
 
-    if args.buffer_size > 1:
-        print('| Sentence buffer size:', args.buffer_size)
-    print('| Type the input sentence and press return:')
-    start_id = 0
-    for inputs in buffered_read(args.input, args.buffer_size):
+        assert not self.args.sampling or self.args.nbest == self.args.beam, \
+            '--sampling requires --nbest to be equal to --beam'
+        assert not self.args.max_sentences or self.args.max_sentences <= self.args.buffer_size, \
+            '--max-sentences/--batch-size cannot be larger than --buffer-size'
+
+        self.use_cuda = torch.cuda.is_available() and not self.args.cpu
+
+        self.task = tasks.setup_task(self.args)
+
+        self.models, self._model_args = checkpoint_utils.load_model_ensemble(
+            self.args.path.split(':'),
+            arg_overrides=eval(self.args.model_overrides),
+            task=self.task,
+        )
+
+        self.src_dict = self.task.source_dictionary
+        self.tgt_dict = self.task.target_dictionary
+
+        for model in self.models:
+            model.make_generation_fast_(
+                beamable_mm_beam_size=None if self.args.no_beamable_mm else self.args.beam,
+                need_attn=self.args.print_alignment,
+            )
+            if self.args.fp16:
+                model.half()
+            if self.use_cuda:
+                model.cuda()
+
+        self.generator = self.task.build_generator(self.args)
+
+        if self.args.remove_bpe == 'gpt2':
+            from fairseq.gpt2_bpe.gpt2_encoding import get_encoder
+            self.decoder = get_encoder(
+                'fairseq/gpt2_bpe/encoder.json',
+                'fairseq/gpt2_bpe/vocab.bpe',
+            )
+            self.encode_fn = lambda x: ' '.join(map(str, self.decoder.encode(x)))
+        else:
+            self.decoder = None
+            self.encode_fn = lambda x: x
+
+        self.align_dict = utils.load_align_dict(self.args.replace_unk)
+
+        self.max_positions = utils.resolve_max_positions(
+            self.task.max_positions(),
+            *[model.max_positions() for model in self.models]
+        )
+
+    def generate(self, string):
+        start_id = 0
+        inputs = [string]
         results = []
-        for batch in make_batches(inputs, args, task, max_positions, encode_fn):
+        for batch in make_batches(inputs, self.args, self.task, self.max_positions, self.encode_fn):
             src_tokens = batch.src_tokens
             src_lengths = batch.src_lengths
-            if use_cuda:
+            if self.use_cuda:
                 src_tokens = src_tokens.cuda()
                 src_lengths = src_lengths.cuda()
 
@@ -141,49 +152,37 @@ def main(args):
                     'src_lengths': src_lengths,
                 },
             }
-            translations = task.inference_step(generator, models, sample)
+            translations = self.task.inference_step(self.generator, self.models, sample)
             for i, (id, hypos) in enumerate(zip(batch.ids.tolist(), translations)):
-                src_tokens_i = utils.strip_pad(src_tokens[i], tgt_dict.pad())
+                src_tokens_i = utils.strip_pad(src_tokens[i], self.tgt_dict.pad())
                 results.append((start_id + id, src_tokens_i, hypos))
 
-        # sort output to match input order
         for id, src_tokens, hypos in sorted(results, key=lambda x: x[0]):
-            if src_dict is not None:
-                src_str = src_dict.string(src_tokens, args.remove_bpe)
-                print('S-{}\t{}'.format(id, src_str))
+            if self.src_dict is not None:
+                src_str = self.src_dict.string(src_tokens, self.args.remove_bpe)
 
-            # Process top predictions
-            for hypo in hypos[:min(len(hypos), args.nbest)]:
+            for hypo in hypos[:min(len(hypos), self.args.nbest)]:
                 hypo_tokens, hypo_str, alignment = utils.post_process_prediction(
                     hypo_tokens=hypo['tokens'].int().cpu(),
                     src_str=src_str,
                     alignment=hypo['alignment'].int().cpu() if hypo['alignment'] is not None else None,
-                    align_dict=align_dict,
-                    tgt_dict=tgt_dict,
-                    remove_bpe=args.remove_bpe,
+                    align_dict=self.align_dict,
+                    tgt_dict=self.tgt_dict,
+                    remove_bpe=self.args.remove_bpe,
                 )
-                if decoder is not None:
-                    hypo_str = decoder.decode(map(int, hypo_str.strip().split()))
-                print('H-{}\t{}\t{}'.format(id, hypo['score'], hypo_str))
-                print('P-{}\t{}'.format(
-                    id,
-                    ' '.join(map(lambda x: '{:.4f}'.format(x), hypo['positional_scores'].tolist()))
-                ))
-                if args.print_alignment:
-                    print('A-{}\t{}'.format(
-                        id,
-                        ' '.join(map(lambda x: str(utils.item(x)), alignment))
-                    ))
+                if self.decoder is not None:
+                    hypo_str = self.decoder.decode(map(int, hypo_str.strip().split()))
 
-        # update running id counter
-        start_id += len(inputs)
-
-
-def cli_main():
-    parser = options.get_generation_parser(interactive=True)
-    args = options.parse_args_and_arch(parser)
-    main(args)
-
+                return hypo_str
 
 if __name__ == '__main__':
-    cli_main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-source_sentence', type=str)
+    parser.add_argument('-path_checkpoint', type=str)
+    parser.add_argument('-data_bin', type=str)
+    args = parser.parse_args()
+
+    gen = Generator(args.data_bin, args.path_checkpoint)
+    print(gen.generate(args.source_sentence))
+
+    
